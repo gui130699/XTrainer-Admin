@@ -1,6 +1,6 @@
 # XTrainer Admin
 
-Painel administrativo separado do XTrainer, construído com Next.js, TypeScript e Firebase Web SDK. O painel não possui banco próprio.
+Painel administrativo separado do XTrainer para consultar usuários cadastrados e administrar a biblioteca global de exercícios. O painel não possui banco próprio.
 
 > **IMPORTANTE:** XTrainer e XTrainer Admin utilizam o mesmo Firebase: `xtrainer-45f8d`. Authentication, Firestore e Storage são compartilhados. Este repositório passa a ser a fonte canônica das regras compartilhadas; qualquer mudança deve permanecer compatível com o aplicativo principal.
 
@@ -12,7 +12,7 @@ O frontend não usa Admin SDK, Service Account nem chaves privadas. A lista de u
 
 ## Collections compartilhadas
 
-`system/config`, `users`, `exercises`, `workouts`, `workoutSessions`, `bodyWeights`, `physicalAssessments` e `auditLogs`. A biblioteca padrão é uma cópia controlada do dataset canônico de 202 exercícios do XTrainer e mantém IDs determinísticos.
+O painel acessa `system/config`, `users`, `exercises` e `auditLogs`. As collections `workouts`, `workoutSessions`, `bodyWeights` e `physicalAssessments` continuam no mesmo Firebase, mas são privadas de cada usuário e não são consultadas pelo administrador. A biblioteca padrão é uma cópia controlada do dataset canônico de 202 exercícios do XTrainer e mantém IDs determinísticos.
 
 ## Desenvolvimento local
 
@@ -42,5 +42,5 @@ Storage só deve ser publicado após confirmar que o bucket está habilitado.
 
 - Não administra diretamente contas do Firebase Auth.
 - Não troca `adminUid` pela interface.
-- Consultas administrativas são carregadas sob demanda; paginação por cursor é uma evolução para bases grandes.
+- A lista de usuários vem dos perfis `users/{uid}` e não da lista completa do Firebase Auth.
 - Funções administrativas que exijam ambiente confiável devem usar Cloud Functions no futuro, nunca Admin SDK no navegador.

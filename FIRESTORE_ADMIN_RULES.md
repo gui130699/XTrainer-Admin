@@ -7,8 +7,8 @@ O arquivo `firestore.rules` deste repositório é canônico para XTrainer e XTra
 - `system/config`: leitura necessária ao login; criação apenas no primeiro bootstrap; mudança apenas pelo admin.
 - `users`: próprio perfil ou admin; usuário comum não eleva o papel.
 - `exercises`: leitura autenticada; escrita somente admin.
-- `workouts`: dono ou admin; admin pode criar para outro usuário; sessões antigas não são apagadas.
-- `workoutSessions`, `bodyWeights`, `physicalAssessments`: dono ou admin; usuário comum preserva `ownerId`.
+- `workouts`: somente o dono; o próprio usuário cria e administra seus treinos.
+- `workoutSessions`, `bodyWeights`, `physicalAssessments`: somente o dono; o administrador não consulta dados pessoais.
 - `auditLogs`: leitura e criação somente admin.
 
 ## Publicação
@@ -19,4 +19,4 @@ As regras afetam o aplicativo principal. Execute testes e só então publique:
 firebase deploy --only firestore:rules,firestore:indexes --project xtrainer-45f8d
 ```
 
-O índice novo documentado é `physicalAssessments(ownerId ASC, date DESC)`. Os índices já utilizados por sessões e peso foram preservados.
+Os índices do XTrainer foram preservados porque continuam necessários ao aplicativo principal, mesmo sem uso pelo painel administrativo.

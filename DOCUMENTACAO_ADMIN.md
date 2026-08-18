@@ -7,14 +7,11 @@ Aplicação Next.js App Router exportada estaticamente para `/XTrainer-Admin`. F
 ## Rotas
 
 - `/login`: login exclusivo do administrador.
-- `/`: indicadores reais e atividade recente.
-- `/usuarios`: perfis Firestore, pesquisa e detalhes relacionados.
-- `/exercicios`: CRUD, ativação, seed idempotente e proteção contra exclusão referenciada.
-- `/treinos`: criação para usuário, edição, arquivamento e exclusão sem cascata.
-- `/sessoes`: filtros, snapshot detalhado e cancelamento confirmado de sessão ativa.
-- `/evolucao`: peso por usuário, gráfico e CRUD administrativo.
-- `/avaliacoes`: consulta de avaliações, medidas e campos existentes.
-- `/sistema`: projeto Firebase, administrador, biblioteca e versão.
+- `/`: indicadores de usuários e exercícios.
+- `/usuarios`: perfis Firestore, pesquisa e dados cadastrais.
+- `/exercicios`: listagem, cadastro, edição, ativação/desativação e seed idempotente.
+
+Treinos, sessões, evolução, peso e avaliações não possuem rotas administrativas. Esses dados são gerenciados exclusivamente pelo próprio usuário no XTrainer.
 
 ## Componentes, services e tipos
 
@@ -22,7 +19,7 @@ Aplicação Next.js App Router exportada estaticamente para `/XTrainer-Admin`. F
 
 ## Permissões
 
-Usuários comuns continuam restritos aos próprios dados. O administrador recebe leitura administrativa e as escritas usadas pelo painel. `ownerId` não pode ser trocado por usuários comuns. `exercises` e `auditLogs` são escritos apenas pelo administrador.
+O administrador pode ler os perfis em `users` e administrar `exercises`. Treinos, sessões, pesos, avaliações e arquivos pessoais permanecem acessíveis somente ao respectivo usuário. `exercises` e `auditLogs` são escritos apenas pelo administrador.
 
 ## Deploy e limitações
 

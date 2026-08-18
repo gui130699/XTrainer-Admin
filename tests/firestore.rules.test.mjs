@@ -49,9 +49,11 @@ test("isolamento vale para sessão, peso e avaliação", async () => {
   }
 });
 
-test("administrador consulta e administra collections compartilhadas", async () => {
-  for (const name of ["users", "workouts", "workoutSessions", "bodyWeights", "physicalAssessments"]) await assertSucceeds(getDocs(collection(admin, name)));
-  await assertSucceeds(setDoc(doc(admin, "workouts", "admin-for-b"), { ownerId: "user-b", name: "Criado pelo admin" }));
-  await assertSucceeds(updateDoc(doc(admin, "workoutSessions", "session-a"), { status: "cancelled" }));
+test("administrador vê usuários e exercícios, mas não dados pessoais", async () => {
+  await assertSucceeds(getDocs(collection(admin, "users")));
+  await assertSucceeds(updateDoc(doc(admin, "exercises", "supino"), { active: false }));
+  for (const name of ["workouts", "workoutSessions", "bodyWeights", "physicalAssessments"]) await assertFails(getDocs(collection(admin, name)));
+  await assertFails(setDoc(doc(admin, "workouts", "admin-for-b"), { ownerId: "user-b", name: "Criado pelo admin" }));
+  await assertFails(updateDoc(doc(admin, "workoutSessions", "session-a"), { status: "cancelled" }));
   await assertSucceeds(setDoc(doc(admin, "auditLogs", "log-1"), { adminUid: "admin", action: "test" }));
 });
