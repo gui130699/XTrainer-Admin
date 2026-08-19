@@ -8,12 +8,17 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test:rules": "firebase emulators:exec --only firestore --project xtrainer-45f8d \"node --test tests/firestore.rules.test.mjs\""
+    "test:rules": "firebase emulators:exec --only firestore --project xtrainer-45f8d \"node --test tests/firestore.rules.test.mjs\"",
+    "test": "npm run test:rules",
+    "check:firebase-contract": "node scripts/check-firebase-contract.mjs",
+    "replace:exercise-library": "node scripts/replace-default-exercises-from-csv.mjs",
+    "replace:firestore-exercises": "node scripts/replace-firestore-exercises.mjs"
+    ,"seed:training-methods": "tsx scripts/seed-training-methods.ts"
   },
   "dependencies": {
     "firebase": "11.10.0",
     "lucide-react": "0.475.0",
-    "next": "15.5.23",
+    "next": "^16.3.1",
     "react": "19.1.0",
     "react-dom": "19.1.0"
   },
@@ -26,7 +31,9 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "15.5.23",
+    "eslint-config-next": "^16.3.1",
+    "firebase-tools": "^15.27.0",
     "typescript": "^5"
+    ,"tsx": "^4.23.12"
   }
 }
