@@ -11,6 +11,7 @@ const Context = createContext<State>({ user: null, admin: false, loading: true }
 async function registerPwaUpdate() {
   if (!("serviceWorker" in navigator)) return;
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+  const buildVersion = process.env.NEXT_PUBLIC_BUILD_VERSION ?? "local";
   const hadController = Boolean(navigator.serviceWorker.controller);
   let refreshing = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => {
@@ -18,7 +19,7 @@ async function registerPwaUpdate() {
     refreshing = true;
     window.location.reload();
   });
-  const registration = await navigator.serviceWorker.register(`${basePath}/sw.js`, { updateViaCache: "none" });
+  const registration = await navigator.serviceWorker.register(`${basePath}/sw.js?v=${buildVersion}`, { updateViaCache: "none" });
   await registration.update();
 }
 
