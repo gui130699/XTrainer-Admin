@@ -1,7 +1,7 @@
 import { addDoc, collection, doc, getCountFromServer, getDoc, getDocs, query, serverTimestamp, updateDoc, where, writeBatch } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { DEFAULT_EXERCISES } from "@/data/default-exercises";
-import type { Exercise, SeedResult, SubstanceReference, UserProfile } from "@/types";
+import type { Exercise, SeedResult, UserProfile } from "@/types";
 
 const all = async <T>(path: string) => (await getDocs(collection(db, path))).docs.map((item) => ({ id: item.id, ...item.data() }) as T);
 const withoutUndefined = (data: object) => Object.fromEntries(Object.entries(data).filter(([, value]) => value !== undefined));
@@ -67,14 +67,6 @@ export const exercisesService = {
     }
     return result;
   },
-};
-
-export const substanceReferencesService = {
-  list: () => all<SubstanceReference>("substanceReferences"),
-  save: (data: Omit<SubstanceReference, "id" | "createdAt" | "updatedAt">, id?: string) => id
-    ? updateDoc(doc(db, "substanceReferences", id), { ...withoutUndefined(data), updatedAt: serverTimestamp() })
-    : addDoc(collection(db, "substanceReferences"), { ...withoutUndefined(data), createdAt: serverTimestamp(), updatedAt: serverTimestamp() }),
-  toggle: (item: SubstanceReference) => updateDoc(doc(db, "substanceReferences", item.id), { active: !item.active, updatedAt: serverTimestamp() }),
 };
 
 export async function dashboard() {
