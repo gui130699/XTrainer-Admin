@@ -1,7 +1,8 @@
 import { addDoc, collection, doc, getCountFromServer, getDoc, getDocs, query, serverTimestamp, updateDoc, where, writeBatch } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { DEFAULT_EXERCISES } from "@/data/default-exercises";
-import type { Exercise, SeedResult, UserProfile } from "@/types";
+import type { Exercise, MuscleGroup, SeedResult, UserProfile } from "@/types";
+import { slugifyExerciseName } from "@/lib/utils";
 
 const all = async <T>(path: string) => (await getDocs(collection(db, path))).docs.map((item) => ({ id: item.id, ...item.data() }) as T);
 const withoutUndefined = (data: object) => Object.fromEntries(Object.entries(data).filter(([, value]) => value !== undefined));
@@ -66,6 +67,43 @@ export const exercisesService = {
       await batch.commit();
     }
     return result;
+  },
+};
+
+export const muscleGroupsService = {
+  list: () => all<MuscleGroup>("muscleGroups"),
+  save: (data: Omit<MuscleGroup, "id" | "createdAt" | "updatedAt">, id?: string) => id
+    ? updateDoc(doc(db, "muscleGroups", id), { ...withoutUndefined(data), updatedAt: serverTimestamp() })
+    : addDoc(collection(db, "muscleGroups"), { ...withoutUndefined(data), createdAt: serverTimestamp(), updatedAt: serverTimestamp() }),
+  toggle: (item: MuscleGroup) => updateDoc(doc(db, "muscleGroups", item.id), { active: !item.active, updatedAt: serverTimestamp() }),
+  // Le os grupos musculares distintos ja usados pelos exercicios existentes e cria um
+  // documento de catalogo para cada um que ainda nao exista (por slug do nome). Idempotente:
+  // rodar de novo nunca duplica nem reativa um grupo desativado manualmente pelo admin.
+  seedFromExercises: async (): Promise<{ created: number; skipped: number }> => {
+    const [exercisesSnapshot, existingSnapshot] = await Promise.all([getDocs(collection(db, "exercises")), getDocs(collection(db, "muscleGroups"))]);
+    const existingIds = new Set(existingSnapshot.docs.map((item) => item.id));
+    const seen = new Set<string>();
+    const ordered: string[] = [];
+    for (const item of exercisesSnapshot.docs) {
+      const name = String(item.data().muscleGroup ?? "").trim();
+      const id = slugifyExerciseName(name);
+      if (!name || !id || seen.has(id)) continue;
+      seen.add(id);
+      ordered.push(name);
+    }
+    let created = 0;
+    let skipped = 0;
+    let sortOrder = existingSnapshot.size;
+    const batch = writeBatch(db);
+    for (const name of ordered) {
+      const id = slugifyExerciseName(name);
+      if (existingIds.has(id)) { skipped += 1; continue; }
+      sortOrder += 1;
+      batch.set(doc(db, "muscleGroups", id), { name, active: true, sortOrder, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+      created += 1;
+    }
+    if (created > 0) await batch.commit();
+    return { created, skipped };
   },
 };
 

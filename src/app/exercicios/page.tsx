@@ -4,9 +4,9 @@ import { Download, ExternalLink, Pencil, Power } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { AdminShell } from "@/components/admin-shell";
 import { Badge, Button, Card, ConfirmDialog, Empty, Loading, PageTitle } from "@/components/ui";
-import { exercisesService, logAction } from "@/services/data";
+import { exercisesService, logAction, muscleGroupsService } from "@/services/data";
 import { useAdmin } from "@/components/providers";
-import type { Exercise } from "@/types";
+import type { Exercise, MuscleGroup } from "@/types";
 import { errorMessage, normalize } from "@/lib/utils";
 
 const empty = { name: "", nameEn: "", aliases: "", muscleGroup: "", videoUrl: "", active: true };
@@ -21,6 +21,7 @@ function csvCell(value: unknown) {
 export default function ExercisesPage() {
   const { user } = useAdmin();
   const [items, setItems] = useState<Exercise[]>([]);
+  const [muscleGroups, setMuscleGroups] = useState<MuscleGroup[]>([]);
   const [search, setSearch] = useState("");
   const [group, setGroup] = useState("");
   const [status, setStatus] = useState("");
@@ -45,7 +46,15 @@ export default function ExercisesPage() {
     const timer = window.setTimeout(() => void reload(), 0);
     return () => window.clearTimeout(timer);
   }, []);
+  useEffect(() => {
+    muscleGroupsService.list().then((result) => setMuscleGroups(result.filter((item) => item.active).sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name, "pt-BR")))).catch(() => setMuscleGroups([]));
+  }, []);
   const groups = useMemo(() => [...new Set(items.map((item) => item.muscleGroup))].sort(), [items]);
+  const groupOptions = useMemo(() => {
+    const catalog = new Map(muscleGroups.map((item) => [item.name, item] as const));
+    if (editing?.muscleGroup && !catalog.has(editing.muscleGroup)) catalog.set(editing.muscleGroup, { id: editing.muscleGroup, name: editing.muscleGroup, active: true });
+    return [...catalog.values()];
+  }, [muscleGroups, editing]);
   const filtered = useMemo(() => items.filter((item) => !group || item.muscleGroup === group).filter((item) => !status || String(item.active) === status).filter((item) => normalize([item.name, item.nameEn, ...(item.aliases ?? [])].filter(Boolean).join(" ")).includes(normalize(search))).sort((a, b) => a.name.localeCompare(b.name, "pt-BR")), [items, search, group, status]);
 
   function open(item?: Exercise) {
@@ -109,7 +118,7 @@ export default function ExercisesPage() {
   return <AdminShell><PageTitle eyebrow="BIBLIOTECA" title="Exercícios" detail="Liste, cadastre, edite e desative exercícios da biblioteca global." action={<div className="actions"><Button className="export-button" onClick={() => void exportExercises()} disabled={loading || !filtered.length}><Download size={16}/>EXPORTAR LISTA</Button><Button className="secondary" onClick={() => setConfirmSeed(true)} disabled={seeding}>{seeding ? "SUBSTITUINDO..." : "SUBSTITUIR CATÁLOGO"}</Button><Button onClick={() => open()}>+ NOVO EXERCÍCIO</Button></div>}/>
     {message && <p className="success" role="status">{message}</p>}{warning && <p className="warning" role="alert">{warning}</p>}{error && <p className="error" role="alert">{error}</p>}
     <Card><div className="filters"><label>Pesquisar<input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Nome, inglês ou alias"/></label><label>Grupo<select value={group} onChange={(event) => setGroup(event.target.value)}><option value="">Todos</option>{groups.map((value) => <option key={value}>{value}</option>)}</select></label><label>Status<select value={status} onChange={(event) => setStatus(event.target.value)}><option value="">Todos</option><option value="true">Ativos</option><option value="false">Inativos</option></select></label></div></Card>
-    {editing !== undefined && <Card><h2>{editing ? "Editar exercício" : "Cadastrar exercício"}</h2><form onSubmit={save}><div className="form-grid"><label>Nome<input required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })}/></label><label>Nome em inglês<input value={form.nameEn} onChange={(event) => setForm({ ...form, nameEn: event.target.value })}/></label><label>Aliases<input value={form.aliases} onChange={(event) => setForm({ ...form, aliases: event.target.value })} placeholder="Separados por vírgula"/></label><label>Grupo muscular<input required value={form.muscleGroup} onChange={(event) => setForm({ ...form, muscleGroup: event.target.value })}/></label><label>URL do vídeo<input type="url" value={form.videoUrl} onChange={(event) => setForm({ ...form, videoUrl: event.target.value })}/>{isSearchVideo(form.videoUrl) && <small>Este link abre uma pesquisa de vídeos no YouTube.</small>}</label><label>Estado<select value={String(form.active)} onChange={(event) => setForm({ ...form, active: event.target.value === "true" })}><option value="true">Ativo</option><option value="false">Inativo</option></select></label></div><div className="actions"><Button>SALVAR</Button><button type="button" className="text-button" onClick={() => setEditing(undefined)}>Cancelar</button></div></form></Card>}
+    {editing !== undefined && <Card><h2>{editing ? "Editar exercício" : "Cadastrar exercício"}</h2><form onSubmit={save}><div className="form-grid"><label>Nome<input required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })}/></label><label>Nome em inglês<input value={form.nameEn} onChange={(event) => setForm({ ...form, nameEn: event.target.value })}/></label><label>Aliases<input value={form.aliases} onChange={(event) => setForm({ ...form, aliases: event.target.value })} placeholder="Separados por vírgula"/></label><label>Grupo muscular{groupOptions.length ? <select required value={form.muscleGroup} onChange={(event) => setForm({ ...form, muscleGroup: event.target.value })}><option value="">Selecione...</option>{groupOptions.map((item) => <option key={item.id} value={item.name}>{item.name}</option>)}</select> : <input required value={form.muscleGroup} onChange={(event) => setForm({ ...form, muscleGroup: event.target.value })} placeholder="Cadastre grupos musculares para habilitar a seleção"/>}</label><label>URL do vídeo<input type="url" value={form.videoUrl} onChange={(event) => setForm({ ...form, videoUrl: event.target.value })}/>{isSearchVideo(form.videoUrl) && <small>Este link abre uma pesquisa de vídeos no YouTube.</small>}</label><label>Estado<select value={String(form.active)} onChange={(event) => setForm({ ...form, active: event.target.value === "true" })}><option value="true">Ativo</option><option value="false">Inativo</option></select></label></div><div className="actions"><Button>SALVAR</Button><button type="button" className="text-button" onClick={() => setEditing(undefined)}>Cancelar</button></div></form></Card>}
     {loading ? <Loading/> : <Card><div className="table"><div className="tr head"><span>Exercício</span><span>Grupo</span><span>Status</span><span>Ações</span></div>{filtered.map((item) => <div className="tr" key={item.id}><strong>{item.name}</strong><span>{item.muscleGroup}</span><Badge tone={item.active ? "good" : "neutral"}>{item.active ? "Ativo" : "Inativo"}</Badge><div className="actions exercise-actions">{item.videoUrl && <a className="action-button video-action" href={item.videoUrl} target="_blank" rel="noopener noreferrer"><ExternalLink size={15}/>Vídeo</a>}<button className="action-button edit-action" onClick={() => open(item)}><Pencil size={15}/>Editar</button><button className={`action-button ${item.active ? "disable-action" : "enable-action"}`} aria-label={`${item.active ? "Desativar" : "Ativar"} ${item.name}`} onClick={() => void toggle(item)}><Power size={15}/><span className="action-label">{item.active ? "Desativar" : "Ativar"}</span></button></div></div>)}</div>{!filtered.length && <Empty>Nenhum exercício encontrado.</Empty>}</Card>}<ConfirmDialog open={confirmSeed} title="Substituir completamente o catálogo?" description="Os 202 exercícios serão sobrescritos pelos dados do CSV, todos ficarão ativos e qualquer exercício fora da nova lista será removido. Treinos e históricos existentes serão preservados." confirmLabel="SUBSTITUIR 202" busy={seeding} onCancel={() => setConfirmSeed(false)} onConfirm={() => void seed()}/>
   </AdminShell>;
 }
