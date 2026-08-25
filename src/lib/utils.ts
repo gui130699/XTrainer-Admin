@@ -1,4 +1,13 @@
 import type { Timestamp } from "firebase/firestore";
+// Links de video sao renderizados de volta para o proprio admin (e para o app do usuario, via
+// o mesmo dado). O produto so usa videos do YouTube, entao a validacao e por dominio + https,
+// nao so por "e uma URL absoluta valida" (que aceitaria javascript:/data:).
+const SAFE_VIDEO_HOSTS=new Set(["www.youtube.com","youtube.com","youtu.be"]);
+export function safeVideoUrl(value?:string|null):string|undefined{
+  if(!value)return undefined;
+  try{const url=new URL(value);return url.protocol==="https:"&&SAFE_VIDEO_HOSTS.has(url.hostname)?value:undefined;}
+  catch{return undefined;}
+}
 export const normalize=(value:string)=>value.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
 export const slugifyExerciseName=(value:string)=>normalize(value).replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
 export const dateTime=(value?:Timestamp)=>value?.toDate().toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"})??"—";
