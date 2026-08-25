@@ -63,7 +63,7 @@ jobs:
           NEXT_PUBLIC_BASE_PATH: /XTrainer-Admin
           NEXT_PUBLIC_BUILD_VERSION: ${{ github.sha }}
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: out
 
