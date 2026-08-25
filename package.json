@@ -8,12 +8,13 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test:rules": "firebase emulators:exec --only firestore --project xtrainer-45f8d \"node --test tests/firestore.rules.test.mjs\"",
+    "test:rules": "firebase emulators:exec --only firestore --project xtrainer-45f8d \"node --test tests/firestore.rules.test.mjs && node --test tests/firestore.security-adversarial.test.mjs\"",
     "test": "npm run test:rules",
     "check:firebase-contract": "node scripts/check-firebase-contract.mjs",
     "replace:exercise-library": "node scripts/replace-default-exercises-from-csv.mjs",
-    "replace:firestore-exercises": "node scripts/replace-firestore-exercises.mjs"
-    ,"seed:training-methods": "tsx scripts/seed-training-methods.ts"
+    "replace:firestore-exercises": "node scripts/replace-firestore-exercises.mjs",
+    "seed:training-methods": "tsx scripts/seed-training-methods.ts",
+    "provision:admin-claim": "node scripts/provision-admin-claim.mjs"
   },
   "dependencies": {
     "firebase": "11.10.0",
@@ -32,8 +33,9 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "^16.3.1",
+    "firebase-admin": "^14.3.0",
     "firebase-tools": "^15.27.0",
+    "tsx": "^4.23.12",
     "typescript": "^5"
-    ,"tsx": "^4.23.12"
   }
 }
