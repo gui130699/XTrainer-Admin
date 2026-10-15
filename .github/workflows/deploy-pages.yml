@@ -20,7 +20,7 @@ jobs:
       - name: Stamp PWA build version
         run: sed -i "s/__BUILD_VERSION__/${GITHUB_SHA}/g" public/sw.js public/manifest.webmanifest
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
